@@ -1,0 +1,16 @@
+# GCP Configuration
+gcp:
+  project_id: askvbc-demo-project
+  location: US
+
+# BigQuery Configuration
+bigquery:
+  dataset: askvbc_attribution
+
+# Application Settings
+app:
+  name: AskVBC
+  environment: demo
+  default_response: >
+    I can help explain VBC attribution and delegation decisions
+    for members using business-friendly language.
