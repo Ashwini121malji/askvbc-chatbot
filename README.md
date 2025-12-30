@@ -35,4 +35,13 @@ how real healthcare analytics organizations design explainable AI systems.
 ---
 
 ## 🏗️ Architecture Overview
+## Authentication
+
+This project uses Google Cloud service account authentication.
+
+Set the following environment variable locally:
+
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+
+⚠️ Do not commit service account keys to the repository.
 

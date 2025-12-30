@@ -81,3 +81,6 @@ def get_member_attribution(member_id: int) -> dict:
     except Exception as e:
         print(f"Error querying BigQuery: {e}")
         return None
+
+if __name__ == "__main__":
+    print("This module is not meant to be run directly.")

@@ -1,6 +1,7 @@
 # GCP Configuration
+#askvbc.askvbc_attribution.vbc_contracts
 gcp:
-  project_id: askvbc-demo-project
+  project_id: askvbc
   location: US
 
 # BigQuery Configuration
