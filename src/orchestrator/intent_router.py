@@ -1,38 +1,32 @@
-"""
-Intent Router for AskVBC
-Determines the type of user query and routes it accordingly.
-"""
-
-import re
-from services.attribution_service import handle_why_query
+from src.agents.bq_agent import get_member_attribution
+from src.agents.explanation_agent import explain_attribution
+from src.utils.logger import get_logger
 
 
-def _detect_intent(user_query: str) -> str:
-    query = user_query.lower()
+def handle_question(question: str, trace_id: str) -> dict:
+    logger = get_logger("INTENT_ROUTER", trace_id)
+    q = question.lower()
 
-    if query.startswith("why"):
-        return "WHY"
-    if query.startswith("what"):
-        return "WHAT"
-    if "compare" in query:
-        return "COMPARE"
+    if "member" in q and "attribute" in q:
+        logger.info("Detected ATTRIBUTION intent")
 
-    return "UNKNOWN"
+        member_id = None
+        for word in q.split():
+            if word.isdigit():
+                member_id = int(word)
+                break
 
+        if not member_id:
+            return {
+                "answer": "Please provide a valid member ID.",
+                "rules_checked": []
+            }
 
-def _extract_member_id(user_query: str):
-    match = re.search(r"\b\d+\b", user_query)
-    return int(match.group()) if match else None
+        data = get_member_attribution(member_id, trace_id)
+        return explain_attribution(data, trace_id)
 
-
-def route_query(user_query: str) -> str:
-    intent = _detect_intent(user_query)
-    member_id = _extract_member_id(user_query)
-
-    if intent == "WHY" and member_id:
-        return handle_why_query(member_id)
-
-    return (
-        "I can currently help explain why a member was attributed or delegated. "
-        "Please ask a 'why' question with a member ID."
-    )
+    logger.info("Unknown intent")
+    return {
+        "answer": "I currently support member attribution questions.",
+        "rules_checked": []
+    }

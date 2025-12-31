@@ -1,29 +1,24 @@
 """
 Attribution Service
-Handles business workflows related to attribution and delegation.
+Coordinates between BQ Agent and Explanation Agent.
 """
 
-from agents.bq_agent import get_member_attribution
-from agents.knowledge_agent import get_delegation_rule
-from agents.explanation_agent import build_why_explanation
+from src.agents.bq_agent import get_member_attribution
+from src.agents.explanation_agent import explain_attribution
 
 
-def handle_why_query(member_id: int) -> str:
-    """
-    Handles 'why' questions for a member.
-    """
+def get_attribution_explanation(member_id: int) -> str:
+    data = get_member_attribution(member_id)
 
-    attribution_data = get_member_attribution(member_id)
-
-    if not attribution_data:
+    if not data:
         return f"No attribution data found for member {member_id}."
 
-    if attribution_data["attribution_type"] != "DELEGATED":
-        return (
-            f"Member {member_id} was directly attributed to provider "
-            f"{attribution_data['provider_id']} and was not delegated."
-        )
+    # BQ agent returns dict or list — normalize
+    if isinstance(data, dict):
+        data = [data]
 
-    rule_info = get_delegation_rule(attribution_data["rule_applied"])
+    return explain_attribution(data)
 
-    return build_why_explanation(member_id, attribution_data, rule_info)
+
+def get_attribution_details(member_id: int):
+    return get_member_attribution(member_id)

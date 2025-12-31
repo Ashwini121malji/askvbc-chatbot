@@ -1,0 +1,9 @@
+app:
+  name: AskVBC
+  environment: local
+
+sharepoint:
+  docs_base_path: data/docs
+
+logging:
+  level: INFO

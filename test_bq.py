@@ -1,17 +1,25 @@
 from src.agents.bq_agent import get_member_attribution
 
-def main():
-    member_id = 101
-    print(f"Testing BigQuery fetch for member_id = {member_id}")
 
-    result = get_member_attribution(member_id)
+def test_member(member_id):
+    print(f"\n--- Fetching data for member_id = {member_id} ---")
 
-    if result:
-        print("BigQuery returned:")
-        for key, value in result.items():
-            print(f"{key}: {value}")
-    else:
+    rows = get_member_attribution(member_id)
+
+    if not rows:
         print("No data returned from BigQuery")
+        return
+
+    # Normalize to list (handles 1 or many rows)
+    if isinstance(rows, dict):
+        rows = [rows]
+
+    for row in rows:
+        for key, value in row.items():
+            print(f"{key}: {value}")
+        print("-" * 40)
+
 
 if __name__ == "__main__":
-    main()
+    for mid in [101, 103, 105, 106, 104]:
+        test_member(mid)

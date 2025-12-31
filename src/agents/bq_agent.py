@@ -5,13 +5,11 @@ Responsible for retrieving attribution and delegation data from BigQuery.
 
 from google.cloud import bigquery
 from google.api_core.exceptions import NotFound
-from configparser import ConfigParser
-import yaml
-
-# Load configuration from YAML
 import os
 import yaml
+from src.utils.logger import get_logger
 
+# Load config
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), '../../config/app_config.yaml')
 with open(CONFIG_PATH, 'r') as f:
     config = yaml.safe_load(f)
@@ -19,25 +17,15 @@ with open(CONFIG_PATH, 'r') as f:
 PROJECT_ID = config['gcp']['project_id']
 DATASET = config['bigquery']['dataset']
 
-# Initialize client
+# Initialize BigQuery client
 client = bigquery.Client(project=PROJECT_ID)
 
 
-def get_member_attribution(member_id: int) -> dict:
+def get_member_attribution(member_id: int, trace_id: str) -> dict:
     """
     Fetches joined member attribution + delegation info from BigQuery.
-    Returns a dictionary like:
-    {
-        "member_id": 101,
-        "member_state": "TX",
-        "provider_id": "P1002",
-        "provider_state": "VT",
-        "vbc_contract_id": "VBC_VT_001",
-        "attribution_type": "DELEGATED",
-        "delegation_code": "OAKST_VT",
-        "rule_applied": "DEL-014"
-    }
     """
+    logger = get_logger("BQ_AGENT", trace_id)
 
     query = f"""
     SELECT
@@ -68,19 +56,27 @@ def get_member_attribution(member_id: int) -> dict:
     try:
         query_job = client.query(query, job_config=job_config)
         result = query_job.result()
-        row = list(result)
-        if not row:
+        rows = list(result)
+        if not rows:
+            logger.info(f"No data returned for member_id={member_id}")
             return None
-        # Convert row to dictionary
-        row_dict = dict(row[0])
+        row_dict = dict(rows[0])
+        logger.info(f"Fetched attribution data for member_id={member_id}")
         return row_dict
-
     except NotFound:
-        print(f"Table not found in dataset {DATASET}")
+        logger.error(f"Table not found in dataset {DATASET}")
         return None
     except Exception as e:
-        print(f"Error querying BigQuery: {e}")
+        logger.error(f"Error querying BigQuery: {e}")
         return None
 
-if __name__ == "__main__":
-    print("This module is not meant to be run directly.")
+def run_dynamic_query(sql: str, trace_id: str) -> list:
+    logger = get_logger("BQ_AGENT", trace_id)
+
+    query_job = client.query(sql)
+    rows = query_job.result()
+
+    results = [dict(row) for row in rows]
+
+    logger.info(f"Returned {len(results)} rows")
+    return results
