@@ -1,55 +1,48 @@
-from src.utils.logger import get_logger
+from src.utils.confidence import calculate_confidence, classify_confidence
+
+
+def build_why_not(data: dict) -> list[str]:
+    reasons = []
+
+    if data.get("attribution_type") == "DIRECT":
+        reasons.append(
+            "Member was not attributed via INDIRECT because a DIRECT provider match existed."
+        )
+
+    if data.get("member_state") == data.get("provider_state"):
+        reasons.append(
+            "Geographic fallback was skipped as member and provider states matched."
+        )
+
+    if not data.get("manual_override"):
+        reasons.append(
+            "No manual override rule was triggered."
+        )
+
+    return reasons
+
+
+from src.utils.confidence import calculate_confidence, classify_confidence
 
 
 def explain_attribution(data: dict, trace_id: str) -> dict:
-    logger = get_logger("EXPLANATION_AGENT", trace_id)
+    confidence, confidence_explanation, rule_confidence = calculate_confidence(data)
+    confidence_level = classify_confidence(confidence)
 
-    if not data:
-        return {
-            "answer": "No attribution found for this member.",
-            "rules_checked": [],
-            "trace": []
-        }
-
-    trace = []
-
-    trace.append({
-        "step": "INPUT",
-        "details": {
-            "member_id": data["member_id"],
-            "member_state": data["member_state"]
-        }
-    })
-
-    trace.append({
-        "step": "ATTRIBUTION_MODEL",
-        "details": {
-            "type": data["attribution_type"],
-            "provider_id": data["provider_id"],
-            "provider_state": data["provider_state"],
-            "vbc_contract_id": data["vbc_contract_id"]
-        }
-    })
-
-    trace.append({
-        "step": "DELEGATION_RULE",
-        "details": {
-            "rule_applied": data["rule_applied"],
-            "delegation_code": data["delegation_code"]
-        }
-    })
-
-    explanation = (
+    answer = (
         f"Member {data['member_id']} was attributed using the "
         f"{data['attribution_type']} attribution model. "
-        f"The delegation rule {data['rule_applied']} was applied "
-        f"due to condition: {data['delegation_code']}."
+        f"The delegation rule {data['rule_applied']} was applied due to "
+        f"condition: {data['delegation_code']}."
     )
 
-    logger.info(f"Attribution explained using rule {data['rule_applied']}")
-
     return {
-        "answer": explanation,
-        "rules_checked": [data["rule_applied"]],
-        "trace": trace
+        "answer": answer,
+        "rules_checked": [data.get("rule_applied")],
+        "confidence": confidence,
+        "confidence_level": confidence_level,
+        "confidence_explanation": confidence_explanation,
+        "rule_confidence": rule_confidence,
+        "trace": data.get("trace", [])
     }
+

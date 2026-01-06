@@ -35,7 +35,15 @@ def search_docs(query: str, trace_id: Optional[str] = None) -> str:
     """
     logger = get_logger("KNOWLEDGE_AGENT", trace_id)
 
-    docs_base_path = _get_docs_base_path()
+    def search_docs(query: str):
+        config = load_config()
+        sp = config.get("sharepoint")
+
+        if not sp:
+            return []
+
+        docs_base_path = sp.get("docs_base_path")
+   
     logger.info(f"Searching documents in: {docs_base_path}")
 
     if not docs_base_path.exists():

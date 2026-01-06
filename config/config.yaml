@@ -2,8 +2,13 @@ app:
   name: AskVBC
   environment: local
 
+gcp:
+  project_id: "dummy-project"
+  dataset: "askvbc"
+  location: "US"
+
 sharepoint:
-  docs_base_path: data/docs
+  docs_base_path: "./data/docs"
 
 logging:
   level: INFO

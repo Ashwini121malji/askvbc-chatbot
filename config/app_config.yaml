@@ -1,17 +1,15 @@
-# GCP Configuration
-#askvbc.askvbc_attribution.vbc_contracts
-gcp:
-  project_id: askvbc
-  location: US
+confidence:
+  weights:
+    attribution_type:
+      DIRECT: 0.40
+      DELEGATED: 0.25
 
-# BigQuery Configuration
-bigquery:
-  dataset: askvbc_attribution
+    provider_present: 0.20
 
-# Application Settings
-app:
-  name: AskVBC
-  environment: demo
-  default_response: >
-    I can help explain VBC attribution and delegation decisions
-    for members using business-friendly language.
+    state_match: 0.15
+
+    rule_applied: 0.10
+
+  thresholds:
+    HIGH: 0.80
+    MEDIUM: 0.50
